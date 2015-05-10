@@ -1,0 +1,161 @@
+import sys
+sys.path.append('/usr/local/lib/python2.7/site-packages')
+import math
+import time, threading
+from time import sleep
+from i2clibraries import i2c_attiny85_adc
+from time import *
+from PySide import QtGui
+from PySide import QtCore
+from threading import Timer
+from datetime import datetime
+from time import *
+import time
+
+attiny85adc= i2c_attiny85_adc.i2c_attiny85_adc(1)
+
+class MainWindow(QtGui.QMainWindow):
+
+	def __init__(self):
+		super(MainWindow, self).__init__()
+		
+		#self.status=QtGui.QStatusBar(self)
+		#self.status.setGeometry(110,120,50,20)
+		self.progressBar =QtGui.QProgressBar(self)
+		self.progressBar.setGeometry(10,10,300,25)
+		
+		self.lblstatus=QtGui.QLabel(self)
+		self.lblstatus.setGeometry(80,30,140,25)	
+		#self.status.addPermanentWidget(self.progressBar)
+
+		#self.lblattiny85adc02=QtGui.QLabel(self)
+		#self.lblattiny85adc02.move(10,10)
+		#self.lblattiny85adc02.setText("Status")
+
+		#self.txtattiny85adc02=QtGui.QLineEdit(self)
+		#self.txtattiny85adc02.setGeometry(110,10,145,25)
+		
+		#self.lblattiny85adc03=QtGui.QLabel(self)
+		#self.lblattiny85adc03.move(10,50)
+		#self.lblattiny85adc03.setText("Battery(V)")
+
+		#self.txtattiny85adc03=QtGui.QLineEdit(self)
+		#self.txtattiny85adc03.setGeometry(110,50,75,25)
+
+		
+		self.buttonstart = QtGui.QPushButton(self)
+		self.buttonstart.setText("Observe")
+		self.buttonstart.move(90,60)
+		self.buttonstart.clicked.connect(self.periodical_call)
+		
+
+
+		self.initUI()
+		self.thread = QtCore.QThread()
+		self.worker = Worker()
+		self.worker.moveToThread(self.thread)
+		self.thread.started.connect(self.worker.loop)
+		self.thread.start()
+
+	def initUI(self):               
+        
+		self.resize(250, 150)
+		self.center()
+		self.statusBar()
+		self.setWindowTitle('Bridge Board Battery Monitoring')    
+		self.show()
+		
+	def closeEvent(self, x):
+		self.worker.stop()
+		self.thread.quit()
+		self.thread.wait()
+
+	def periodical_call(self):
+		self.worker.do_stuff("main window") # this works
+		self.timer = QtCore.QTimer()
+		self.timer.timeout.connect(self.do_stuff) # this also works
+		self.timer.start(300)
+
+	def do_stuff(self):
+		dumpval1=((attiny85adc.getAdc02())*0.094)
+		round(dumpval1,2)
+		print (str(dumpval1))
+		if(attiny85adc.getAdc03()<500):
+			#self.txtattiny85adc02.setText("Battery Charging")
+			self.lblstatus.setText("<b><font color=red size=3>Battery Charging</font></b>")
+		else: 
+			#self.txtattiny85adc02.setText("On Battery")
+			self.lblstatus.setText("<b><font color=red size=3>On Battery</font></b>")
+
+		#self.txtattiny85adc03.setText(str(dumpval1))
+		self.progressBar.setValue(dumpval1)
+		#self.txtattiny85adc02.setText(str(attiny85adc.getAdc03()))
+		self.worker.do_stuff("timer main window")
+
+	def center(self):
+        
+		qr = self.frameGeometry()
+		cp = QtGui.QDesktopWidget().availableGeometry().center()
+		qr.moveCenter(cp)
+		self.move(qr.topLeft())
+
+#	def setup_camera(self):
+#		"""Initialize camera.
+#		"""
+#		self.capture = cv2.VideoCapture(0)
+#		self.capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, self.video_size.width())
+#		self.capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, self.video_size.height())
+#		self.timer = QTimer()
+#		self.timer.timeout.connect(self.display_video_stream)
+#		self.timer.start(30)
+ 
+#	def display_video_stream(self):
+#		"""Read frame from camera and repaint QLabel widget.
+#		"""
+#		_, frame = self.capture.read()
+#		frame = cv2.cvtColor(frame, cv2.cv.CV_BGR2RGB)
+#		frame = cv2.flip(frame, 1)
+#		image = QImage(frame, frame.shape[1], frame.shape[0],
+#		frame.strides[0], QImage.Format_RGB888)
+#		self.image_label.setPixmap(QPixmap.fromImage(image))
+
+class Worker(QtCore.QObject):
+	def do_stuff_timer(self):
+		do_stuff("timer worker")
+
+	def do_stuff(self, origin):
+		self.origin = origin
+		self.wait.wakeOne()
+
+	def stop(self):
+		self._exit = True
+		self.wait.wakeAll()
+
+	def loop(self):
+		self.wait = QtCore.QWaitCondition()
+		self.mutex = QtCore.QMutex()
+		self._exit = False
+		while not self._exit:
+			self.wait.wait(self.mutex)
+			print ("loop from %s" % (self.origin,))
+
+			self.timer = QtCore.QTimer()
+			self.timer.setSingleShot(True)
+			self.timer.timeout.connect(self.do_stuff_timer)
+			self.timer.start(1000) # <---- this doesn't work
+
+
+	
+
+def main():
+	app = QtGui.QApplication(sys.argv)
+	ex=MainWindow()
+	ex.resize(320,100)
+	sys.exit(app.exec_())	
+
+
+
+if __name__ == '__main__':
+	main()
+
+

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Robopi Control</title>
+<script>
+function control(num)
+{
+var xmlhttp;
+if(window.XMLHttpRequest)
+     xmlhttp = new XMLHttpRequest();
+else
+ xmlhttp = new ActiveXobjet("Microsoft.XMLHTTP");
+xmlhttp.onreadystatechange = function(){
+     if(xmlhttp.readyState == 4 && xmlhttp.status == 200)
+         document.getElementById('control').innerHTML = 'Control: ' + xmlhttp.responseText;
+    }
+if( num == 0)
+xmlhttp.open('POST','control.php?num=0',true);
+if( num == 1)
+xmlhttp.open('POST','control.php?num=1',true);
+if( num == 2)
+xmlhttp.open('POST','control.php?num=2',true);
+if( num == 3)
+xmlhttp.open('POST','control.php?num=3',true);
+if( num == 4)
+xmlhttp.open('POST','control.php?num=4',true);
+if( num == 5)
+xmlhttp.open('POST','control.php?num=5',true);
+if( num == 6)
+xmlhttp.open('POST','control.php?num=6',true);
+xmlhttp.send();
+}
+</script>
+</head>
+<body>
+<div id="control" >Control:</div>
+<input type="button" onclick="control(0)" value="Forward" style="position: absolute; left: 1000px; top: 200px;">
+<br>
+<input type="button" onclick="control(1)" value="Reverse" style="position: absolute; left: 1000px; top: 260px;">
+<input type="button" onclick="control(2)" value="Left" style="position: absolute; left: 960px; top: 230px;">
+<br>
+<input type="button" onclick="control(3)" value="Right" style="position: absolute; left: 1060px; top: 230px;">
+<br>
+<input type="button" onclick="control(4)" value="Stop"style="position: absolute; left: 1010px; top: 400px;">
+<input type="button" onclick="control(5)" value="Light ON"style="position: absolute; left: 960px; top: 300px;">
+<input type="button" onclick="control(6)" value="Light OFF"style="position: absolute; left: 1060px; top: 300px;">
+<img src= http://{Pi Ip address}:8080/?action=stream style="position: absolute; left: 200px; top: 100px;">
+
+</body>
+</html>

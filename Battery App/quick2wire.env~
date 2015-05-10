@@ -1,0 +1,4 @@
+export QUICK2WIRE_API_HOME=/home/pi/myproject/quick2wire-python-api
+export PYTHONPATH=$PYTHONPATH:$QUICK2WIRE_API_HOME
+PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
+export PKG_CONFIG_PATH
